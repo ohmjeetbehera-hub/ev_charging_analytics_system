@@ -1,9 +1,6 @@
 
--- EV Charging Station Data Management & Analytics (PostgreSQL)
--- Author: ChatGPT
--- Generated: 2025-08-25
 
--- Clean up if re-running
+
 DROP TABLE IF EXISTS charging_sessions;
 DROP TABLE IF EXISTS vehicles;
 DROP TABLE IF EXISTS users;
