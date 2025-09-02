@@ -1,12 +1,9 @@
-
-
-
 DROP TABLE IF EXISTS charging_sessions;
 DROP TABLE IF EXISTS vehicles;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS stations;
 
--- Core tables
+
 CREATE TABLE stations (
   station_id    VARCHAR(10) PRIMARY KEY,
   location      VARCHAR(100) NOT NULL,
