@@ -866,73 +866,43 @@ INSERT INTO charging_sessions (session_id, station_id, vehicle_id, start_time, e
 
 
 
--- View: sessions per station
-DROP VIEW IF EXISTS v_station_usage;
-CREATE VIEW v_station_usage AS
-SELECT s.station_id, st.location, COUNT(*) AS total_sessions, SUM(cs.energy_used_kwh) AS total_kwh, SUM(cs.cost) AS revenue
-FROM charging_sessions cs
-JOIN stations st ON cs.station_id = st.station_id
-JOIN stations s ON s.station_id = cs.station_id
-GROUP BY s.station_id, st.location;
+-- Busiest Charging Station
+SELECT station_id, COUNT(session_id) AS total_sessions
+FROM charging_sessions
+GROUP BY station_id
+ORDER BY total_sessions DESC;
+
 
 -- Peak charging hours
-DROP VIEW IF EXISTS v_peak_hours;
-CREATE VIEW v_peak_hours AS
-SELECT HOUR(start_time) AS hour, COUNT(*) AS sessions
+SELECT HOUR(start_time) AS hour_of_day, COUNT(*) AS total_sessions
 FROM charging_sessions
-GROUP BY hour
-ORDER BY sessions DESC;
+GROUP BY HOUR(start_time)
+ORDER BY total_sessions DESC;
+
 
 -- Revenue per station
-DROP VIEW IF EXISTS v_station_revenue;
-CREATE VIEW v_station_revenue AS
-SELECT st.station_id, st.location, SUM(cs.cost) AS total_revenue
-FROM charging_sessions cs
-JOIN stations st ON cs.station_id = st.station_id
-GROUP BY st.station_id, st.location
+SELECT station_id, SUM(cost) AS total_revenue
+FROM charging_sessions
+GROUP BY station_id
 ORDER BY total_revenue DESC;
 
+
 -- Avg energy per vehicle type
-DROP VIEW IF EXISTS v_energy_by_vehicle_type;
-CREATE VIEW v_energy_by_vehicle_type AS
-SELECT v.vehicle_type, AVG(cs.energy_used_kwh) AS avg_energy_kwh
+SELECT v.vehicle_type, AVG(cs.energy_used_kwh) AS avg_energy_used
 FROM charging_sessions cs
 JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
 GROUP BY v.vehicle_type
-ORDER BY avg_energy_kwh DESC;
+ORDER BY avg_energy_used DESC;
+
 
 -- Top 10 most active users by sessions
-DROP VIEW IF EXISTS v_top_users;
-CREATE VIEW v_top_users AS
-SELECT u.user_id, u.name, COUNT(*) AS sessions, SUM(cs.energy_used_kwh) AS total_kwh, SUM(cs.cost) AS total_spend
+SELECT u.user_id, u.name, COUNT(cs.session_id) AS total_sessions, 
+       SUM(cs.cost) AS total_spent
 FROM charging_sessions cs
 JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
 JOIN users u ON v.user_id = u.user_id
 GROUP BY u.user_id, u.name
-ORDER BY sessions DESC
+ORDER BY total_sessions DESC
 LIMIT 10;
 
--- 1) Station utilization overview
-SELECT * FROM v_station_usage ORDER BY total_sessions DESC;
 
--- 2) Peak hour analysis
-SELECT * FROM v_peak_hours LIMIT 5;
-
--- 3) Station-wise revenue
-SELECT * FROM v_station_revenue;
-
--- 4) Energy usage by vehicle type
-SELECT * FROM v_energy_by_vehicle_type;
-
--- 5) Subscription vs pay-per-use revenue split
-SELECT u.subscription_type, SUM(cs.cost) AS revenue
-FROM charging_sessions cs
-JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
-JOIN users u ON v.user_id = u.user_id
-GROUP BY u.subscription_type;
-
--- 6) Daily sessions trend
-SELECT DATE(start_time) AS day, COUNT(*) AS sessions, SUM(energy_used_kwh) AS kwh
-FROM charging_sessions
-GROUP BY day
-ORDER BY day;
