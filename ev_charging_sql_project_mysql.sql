@@ -864,9 +864,7 @@ INSERT INTO charging_sessions (session_id, station_id, vehicle_id, start_time, e
 INSERT INTO charging_sessions (session_id, station_id, vehicle_id, start_time, end_time, energy_used_kwh, cost) VALUES ('S0753', 'ST02', 'V22', '2025-08-24 13:40:30', '2025-08-24 19:40:30', 43.26, 692.16);
 INSERT INTO charging_sessions (session_id, station_id, vehicle_id, start_time, end_time, energy_used_kwh, cost) VALUES ('S0754', 'ST05', 'V18', '2025-08-24 06:30:00', '2025-08-24 08:53:00', 17.2, 275.2);
 
--- =====================
--- Analytics & Useful Views
--- =====================
+
 
 -- View: sessions per station
 DROP VIEW IF EXISTS v_station_usage;
@@ -878,7 +876,6 @@ JOIN stations s ON s.station_id = cs.station_id
 GROUP BY s.station_id, st.location;
 
 -- Peak charging hours
--- (PostgreSQL EXTRACT)
 DROP VIEW IF EXISTS v_peak_hours;
 CREATE VIEW v_peak_hours AS
 SELECT HOUR(start_time) AS hour, COUNT(*) AS sessions
@@ -914,10 +911,6 @@ JOIN users u ON v.user_id = u.user_id
 GROUP BY u.user_id, u.name
 ORDER BY sessions DESC
 LIMIT 10;
-
--- =====================
--- Example ad-hoc queries (run as needed)
--- =====================
 
 -- 1) Station utilization overview
 SELECT * FROM v_station_usage ORDER BY total_sessions DESC;
